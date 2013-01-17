@@ -75,3 +75,9 @@ sudo pacman -Syu
 # Added 20-fonts.conf to X11/xorg.conf.d/
 https://aur.archlinux.org/packages/ttf-source-code-pro/
 
+https://github.com/milkbikis/powerline-bash
+git clone https://github.com/fncll/vimstuff.git
+cd vimstuff/powerline-fonts/
+sudo cp *otf /usr/share/fonts/TTF/
+
+# rebuild dwm with new option to use powerline font

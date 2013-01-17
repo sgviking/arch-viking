@@ -47,7 +47,7 @@ static const Layout layouts[] = {
 
 /* commands */
 static const char *dmenucmd[] = { "dmenu_run", "-fn", font, "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, NULL };
-static const char *termcmd[]  = { "xterm", "-bg", "black", "-fg", "grey", "-cr", "purple", "-fa", "SourceCodePro-ExtraLight", "-fs", "10", NULL };
+static const char *termcmd[]  = { "xterm", "-bg", "black", "-fg", "grey", "-cr", "purple", "-fa", "SourceCodePro-Light-Powerline", "-fs", "10", NULL };
 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
