@@ -1,0 +1,2 @@
+# adb protocol on the grouper (Nexus 7)
+SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", ATTR{idProduct}=="4e42", MODE="0600", OWNER="viking"

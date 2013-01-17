@@ -1,0 +1,77 @@
+# Do these steps as root
+pacman -S gptfdisk git vim nmap openssh netcat abs
+syslinux-install_update -iam
+
+ln -s /usr/share/zoneinfo/America/Boise /etc/localtime
+
+# uncomment the two lines starting with en_US*
+vim /etc/locale.gen 
+locale-gen 
+echo "LANG=en_US.UTF-8" > /etc/locale.conf
+export LANG=en_US.UTF-8
+
+mkinitcpio -p linux
+
+systemctl enable dhcpcd@eth0.service
+
+# Install VirtualBox stuff
+sudo pacman -S virtualbox-guest-utils
+echo 'vboxguest' >> /etc/modules-load.d/virtualbox.conf
+echo 'vboxsf' >> /etc/modules-load.d/virtualbox.conf
+echo 'vboxvideo' >> /etc/modules-load.d/virtualbox.conf
+
+pacman -S sudo
+# Uncomment line for wheel users to use sudo with password
+vim /etc/sudoers
+
+cp etc/udev/rules.d/51-android.rules /etc/udev/rules.d/
+
+echo 'KEYMAP=us' > /etc/vconsole.conf
+echo 'change_my_hostname' > /etc/hostname
+
+# Clean up generated fstab
+vim /etc/fstab
+
+# Set root password 
+passwd
+
+### End of base install ###
+
+### End of base install ###
+
+sudo systemctl enable sshd.service
+sudo systemctl start sshd
+
+sudo pacman -S xorg-server xorg-server-common libxinerama dmenu slim xterm archlinux-themes-slim slim-themes
+sudo pacman -S aspell libxft libxss libxdg-basedir dunst pidgin pidgin-libnotify xchat tor
+sudo systemctl enable tor.service
+sudo systemctl enable slim.service
+
+sudo abs community/dwm
+cp -R /var/abs/community/dwm ~
+
+cd ~/dwm
+# copied in my modified config.h file
+makepkg -g >> PKGBUILD 
+makepkg -i
+
+cp /usr/share/dunst/dunstrc ~/.config/dunstrc
+vim .config/dunstrc
+
+echo 'exec dwm' > ~/.xinitrc
+echo 'exec dbus-launch' >> ~/.xinitrc
+echo 'exec dunst' >> ~/.xinitrc
+
+# Install some tools
+sudo pacman -S firefox chromium wireshark-gtk
+# Add my user to the wireshark group
+sudo vim /etc/group
+
+# Update everything
+sudo pacman -Syu
+
+# Install fonts
+# Used with xterm (see dwm/config.h)
+# Added 20-fonts.conf to X11/xorg.conf.d/
+https://aur.archlinux.org/packages/ttf-source-code-pro/
+
