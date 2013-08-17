@@ -1,0 +1,117 @@
+# Full disk encryption
+https://wiki.archlinux.org/index.php/Securely_wipe_disk
+
+## Find out which /dev/ is your harddrive.
+
+	fdisk -l
+
+## Wipe existing data from drive.
+
+	dd if=/dev/urandom of=/dev/sda bs=4096
+
+As I was doing this on a new machine I only did one pass so that the whole drive looked random for the encryption setup. If I wanted to make sure that nobody could pull files feel free to run as many iterations as your paranoid heart desires. A tool like shred or .... might also be an option.
+
+On my Lenevo X1 Carbon this process took 9 hours 50 minutes.
+
+## Encrypt partitions
+
+	cryptsetup --cipher aes-xts-plain64 --key-size 512 --hash sha512 --iter-time 5000 --use-random --verify-passphrase luksFormat /dev/sda3
+	cryptsetup --cipher aes-xts-plain64 --key-size 512 --hash sha512 --iter-time 5000 --use-random -d /etc/luks-keys/home /dev/sda4
+
+Do this for every partition except for the boot partition.
+
+## Open encrypted volumes for use
+
+	cryptsetup luksOpen /dev/sda2 swap  
+	cryptsetup luksOpen /dev/sda3 root
+	cryptsetup luksOpen /dev/sda4 home
+
+## Format drives for install  
+	
+	mkfs.ext4 /dev/sda1  
+	mkfs.ext4 /dev/mapper/root  
+	mkfs.ext4 /dev/mapper/home  
+	mkswap /dev/mapper/swap  
+
+## Mount drives for install
+
+	mount /dev/mapper/root /mnt
+	cd /mnt
+	mkdir boot home
+        mount /dev/mapper/home /mnt/home  
+	mount /dev/sda1 /mnt/boot  	
+	swapon /dev/mapper/swap  
+	
+# Setup Arch linux
+
+	pacstrap /mnt base base-devel  
+	genfstab /mnt > /mnt/etc/fstab  
+	arch-chroot /mnt  
+
+## Inside chroot  
+
+	pacman -S dialog wpa_supplicant  
+	pacman -S syslinux gptfdisk git vim nmap openssh netcat abs  	
+	syslinux-install_update -iam  
+
+	ln -s /usr/share/zoneinfo/America/Boise /etc/localtime  
+	pacman -S ntp  
+	ntpdate pool.ntp.org  
+	
+In /etc/mkinitcpio.conf on the line with HOOKS="...."
+add encrypt before the filesystem is loaded.  
+
+	mkinitcpio -p linux  
+
+	mkdir /etc/luks-keys  
+	dd if=/dev/urandom of=/etc/luks-keys/home bs=1k count=2
+	cryptsetup --cipher aes-xts-plain64 --key-size 512 --hash sha512 --iter-time 5000 --use-random -d /etc/luks-keys/home luksFormat /dev/sda4  
+	cryptsetup luksOpen /dev/sda4 home  
+	mkfs.ext4 /dev/mapper/
+
+Work on /etc/crypttab  
+	
+	home	/dev/sda4	/etc/luks-keys/home
+	swap	/dev/sda2	/dev/urandom		swap,cipher=aes-cbc-essiv:sha256,size=256  
+
+
+## Outside chroot, unmount, unload and reboot  
+
+	umount /mnt/boot
+	umount /mnt/home
+	umount /mnt
+	swapoff /dev/mapper/swap  
+	cryptsetup luksClose /dev/mapper/root
+	cryptsetup luksClose /dev/mapper/home  
+	cryptsetup luksClose /dev/mapper/swap  
+
+## Use gdisk to setup partitions
+
+/dev/sda1  /boot  100M
+/dev/sda2  swap   8G
+/dev/sda3  /      20G
+/dev/sda4  /home  *
+
+
+# First boot
+Update password security   /etc/pam.d/passwd  
+
+	password	required	pam_unix2.so blowfish shadow nullok rounds=65000  
+
+	useradd -m -d /home/user -G wheel user
+
+Add user to wheel group.
+
+	pacman -S xorg-server xorg-server-common xorg-xauth xterm
+	pacman -S slim slim-themes archlinux-themes-slim  
+	pacman -S xf86-video-intel  
+	pacman -S dmenu chromium wireshark-gtk  
+	pacman -S virtualbox virtualbox-host-modules qt4 net-tools  
+	pacman -S linux-headers  
+
+	sudo abs community/dwm
+	cp -R /var/abs/community/dwm .  
+
+	
+	
+
